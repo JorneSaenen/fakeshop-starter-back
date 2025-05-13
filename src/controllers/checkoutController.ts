@@ -33,10 +33,23 @@ export const createOrder = async (req: Request, res: Response) => {
   res.status(201).json(order);
 };
 
-//
 export const payment = async (req: Request, res: Response) => {
   // get User data from Clerk
-  const { items } = req.body;
+  const { userId } = getAuth(req);
+  if (!userId) {
+    res.status(401).json({ message: "Unauthorized" });
+    return;
+  }
+
+  // TODO:
+  // create a new order
+  // Do the payment with Stripe
+  // if pament is successfull, change order status to paid
+  // if payment is not successfull, leave status to confirmed
+  // redirect user to the order page -- Build order page in the frontend
+  // remove the cart items
+
+  const { items } = req.body; // replace with the actual order items
   const lineItems = [];
   // Finetune the data with de models
   for (const item of items) {

@@ -5,6 +5,7 @@ import express from "express";
 import { notFound } from "./controllers/notFoundController";
 import productRoutes from "./routes/productRoutes";
 import cartRoutes from "./routes/cartRoutes";
+import orderRoutes from "./routes/orderRoutes";
 import mongoose from "mongoose";
 import { errorHandler } from "./middleware/errorHandler";
 import { clerkMiddleware } from "@clerk/express";
@@ -25,6 +26,7 @@ app.use(clerkMiddleware());
 // Routes
 app.use("/api/products", productRoutes);
 app.use("/api/cart", cartRoutes);
+app.use("/api/checkout", orderRoutes);
 app.all("*splat", notFound);
 
 // Error handling (must be the last)
