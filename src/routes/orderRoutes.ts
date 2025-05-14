@@ -1,11 +1,11 @@
 import express from "express";
-import { canceled, payment, success } from "../controllers/checkoutController";
+import {
+  getOrderById,
+  getOrdersByCurrentUser,
+} from "../controllers/orderController";
 
 const router = express.Router();
 
-router
-  .get("/success", success)
-  .get("/canceled", canceled)
-  .post("/payment", payment);
+router.get("/", getOrdersByCurrentUser).get("/order/:id", getOrderById);
 
 export default router;
