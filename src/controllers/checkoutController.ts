@@ -1,22 +1,14 @@
 import { Request, Response } from "express";
-import { getAuth } from "@clerk/express";
+import { clerkClient, getAuth } from "@clerk/express";
 import { Cart } from "../models/cartModel";
 import { Order } from "../models/orderModel";
 import Stripe from "stripe";
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
-export const createOrder = async (req: Request, res: Response) => {
-  const { userId } = getAuth(req);
-
-  if (!userId) {
-    res.status(401).json({ message: "Unauthorized" });
-    return;
-  }
-
+const createOrder = async (userId: string) => {
   const cart = await Cart.find({ userId });
   if (!cart) {
-    res.status(404).json({ message: "Cart not found" });
-    return;
+    throw new Error("Cart not found");
   }
 
   const products = cart.map((item) => {
@@ -29,8 +21,9 @@ export const createOrder = async (req: Request, res: Response) => {
   const order = await Order.create({
     products,
     userId,
+    status: "paid",
   });
-  res.status(201).json(order);
+  return order;
 };
 
 export const payment = async (req: Request, res: Response) => {
@@ -40,6 +33,8 @@ export const payment = async (req: Request, res: Response) => {
     res.status(401).json({ message: "Unauthorized" });
     return;
   }
+
+  const user = await clerkClient.users.getUser(userId);
 
   // Do the payment with Stripe
   const cart = await Cart.find({ userId }).populate("productId");
@@ -67,8 +62,7 @@ export const payment = async (req: Request, res: Response) => {
     payment_method_types: ["card", "bancontact", "ideal"],
     mode: "payment",
     line_items: lineItems,
-    // use the user data from Clerk
-    customer_email: "IgR6s@example.com",
+    customer_email: user.emailAddresses[0].emailAddress,
     shipping_address_collection: {
       allowed_countries: ["BE"],
     },
