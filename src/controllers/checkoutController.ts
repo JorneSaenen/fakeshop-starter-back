@@ -185,7 +185,7 @@ export const success = async (req: Request, res: Response) => {
       countdownElement.textContent = countdown;
       if (countdown === 0) {
         clearInterval(interval);
-        window.location.href = "http://localhost:5173";
+        window.location.href = "http://localhost:5173/orders";
       }
     }, 1000);
   </script>
