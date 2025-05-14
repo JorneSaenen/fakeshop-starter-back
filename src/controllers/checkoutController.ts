@@ -114,7 +114,7 @@ export const payment = async (req: Request, res: Response) => {
 
     success_url:
       "http://localhost:3000/api/checkout/success?session_id={CHECKOUT_SESSION_ID}",
-    cancel_url: `http://localhost:3000/canceled`,
+    cancel_url: `http://localhost:3000/api/checkout/canceled`,
   });
 
   res.status(200).json({ url: session.url });
@@ -180,7 +180,7 @@ export const success = async (req: Request, res: Response) => {
       countdownElement.textContent = countdown;
       if (countdown === 0) {
         clearInterval(interval);
-        window.location.href = "http://localhost:5173"; // pas aan indien nodig
+        window.location.href = "http://localhost:5173";
       }
     }, 1000);
   </script>
@@ -189,5 +189,64 @@ export const success = async (req: Request, res: Response) => {
 `);
 };
 export const canceled = async (req: Request, res: Response) => {
-  res.send(`<html><body><h1>Payment canceled</h1></body></html>`);
+  res.send(`<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Order Mislukt</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #fff5f5;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      text-align: center;
+    }
+    .error-box {
+      background-color: #ffe5e5;
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      border: 1px solid #ff4d4d;
+    }
+    h1 {
+      color: #cc0000;
+    }
+    .timer {
+      font-size: 1.5rem;
+      margin-top: 1rem;
+      color: #333;
+    }
+  </style>
+</head>
+<body>
+  <div class="error-box">
+    <h1>Helaas, je bestelling is mislukt</h1>
+    <p>Er ging iets mis tijdens het verwerken van je order.</p>
+    <div class="timer">
+      Je wordt binnen <span id="countdown">5</span> seconden teruggestuurd naar de homepagina...
+    </div>
+  </div>
+
+  <script>
+    let countdown = 5;
+    const countdownElement = document.getElementById("countdown");
+
+    const interval = setInterval(() => {
+      countdown--;
+      countdownElement.textContent = countdown;
+      if (countdown === 0) {
+        clearInterval(interval);
+        window.location.href = "http://localhost:5173";
+      }
+    }, 1000);
+  </script>
+</body>
+</html>
+`);
 };
