@@ -63,6 +63,9 @@ export const payment = async (req: Request, res: Response) => {
     mode: "payment",
     line_items: lineItems,
     customer_email: user.emailAddresses[0].emailAddress,
+    metadata: {
+      userId,
+    },
     shipping_address_collection: {
       allowed_countries: ["BE"],
     },
@@ -108,9 +111,83 @@ export const payment = async (req: Request, res: Response) => {
         },
       },
     ],
-    success_url: `http://localhost:3000/success`,
+
+    success_url:
+      "http://localhost:3000/api/checkout/success?session_id={CHECKOUT_SESSION_ID}",
     cancel_url: `http://localhost:3000/canceled`,
   });
 
   res.status(200).json({ url: session.url });
+};
+
+export const success = async (req: Request, res: Response) => {
+  const session = await stripe.checkout.sessions.retrieve(req.query.session_id);
+  if (!session) {
+    res.status(404).json({ message: "Session not found" });
+    return;
+  }
+  await createOrder(session.metadata!.userId!);
+  // Clear the cart
+  await Cart.deleteMany({
+    userId: session.metadata!.userId!,
+  });
+  res.send(`<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Order Bevestigd</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f9f9f9;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      text-align: center;
+    }
+    .confirmation {
+      background-color: #ffffff;
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    .timer {
+      font-size: 1.5rem;
+      margin-top: 1rem;
+      color: #444;
+    }
+  </style>
+</head>
+<body>
+  <div class="confirmation">
+    <h1>Bedankt voor je bestelling!</h1>
+    <p>Je order is succesvol geplaatst.</p>
+    <div class="timer">
+      Je wordt binnen <span id="countdown">5</span> seconden doorgestuurd naar de homepagina...
+    </div>
+  </div>
+
+  <script>
+    let countdown = 5;
+    const countdownElement = document.getElementById("countdown");
+
+    const interval = setInterval(() => {
+      countdown--;
+      countdownElement.textContent = countdown;
+      if (countdown === 0) {
+        clearInterval(interval);
+        window.location.href = "http://localhost:5173"; // pas aan indien nodig
+      }
+    }, 1000);
+  </script>
+</body>
+</html>
+`);
+};
+export const canceled = async (req: Request, res: Response) => {
+  res.send(`<html><body><h1>Payment canceled</h1></body></html>`);
 };
