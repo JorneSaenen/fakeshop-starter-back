@@ -5,6 +5,11 @@ export const helloMiddleware = (
   res: Response,
   next: NextFunction
 ) => {
-  console.log("Hello From Middleware");
+  res.header("Access-Control-Allow-Origin", "http://localhost:5173");
+  res.header("Access-Control-Allow-Credentials", "true");
+  res.header(
+    "Access-Control-Allow-Headers",
+    "Origin, X-Requested-With, Content-Type, Accept"
+  );
   next();
 };

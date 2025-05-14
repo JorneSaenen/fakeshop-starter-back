@@ -41,26 +41,23 @@ export const payment = async (req: Request, res: Response) => {
     return;
   }
 
-  // TODO:
-  // create a new order
   // Do the payment with Stripe
-  // if pament is successfull, change order status to paid
-  // if payment is not successfull, leave status to confirmed
-  // redirect user to the order page -- Build order page in the frontend
-  // remove the cart items
+  const cart = await Cart.find({ userId }).populate("productId");
+  if (!cart) {
+    res.status(404).json({ message: "Cart not found" });
+    return;
+  }
 
-  const { items } = req.body; // replace with the actual order items
   const lineItems = [];
-  // Finetune the data with de models
-  for (const item of items) {
+  for (const item of cart) {
     const lineItem = {
       price_data: {
         currency: "eur",
         product_data: {
-          name: item.title,
-          images: item.images,
+          name: item.productId.title,
+          images: item.productId.images,
         },
-        unit_amount: item.price * 100,
+        unit_amount: Math.round(item.productId.price * 100),
       },
       quantity: item.quantity,
     };
@@ -117,12 +114,9 @@ export const payment = async (req: Request, res: Response) => {
         },
       },
     ],
-    // send user to the orders page after payment
-    success_url: "http://localhost:3000/success.html",
-    // Send user to the order page whe finds a button to try  pay again
-    cancel_url: "http://localhost:3000/cancel.html",
+    success_url: `http://localhost:3000/success`,
+    cancel_url: `http://localhost:3000/canceled`,
   });
-  res.status(201).json({
-    url: session.url,
-  });
+
+  res.status(200).json({ url: session.url });
 };
