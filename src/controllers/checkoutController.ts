@@ -3,6 +3,7 @@ import { clerkClient, getAuth } from "@clerk/express";
 import { Cart } from "../models/cartModel";
 import { Order } from "../models/orderModel";
 import Stripe from "stripe";
+import { ProductType } from "../models/productModel";
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
 const createOrder = async (userId: string) => {
@@ -37,7 +38,9 @@ export const payment = async (req: Request, res: Response) => {
   const user = await clerkClient.users.getUser(userId);
 
   // Do the payment with Stripe
-  const cart = await Cart.find({ userId }).populate("productId");
+  const cart = await Cart.find({ userId }).populate<{ productId: ProductType }>(
+    "productId"
+  );
   if (!cart) {
     res.status(404).json({ message: "Cart not found" });
     return;
@@ -121,7 +124,9 @@ export const payment = async (req: Request, res: Response) => {
 };
 
 export const success = async (req: Request, res: Response) => {
-  const session = await stripe.checkout.sessions.retrieve(req.query.session_id);
+  const session = await stripe.checkout.sessions.retrieve(
+    req.query.session_id as string
+  );
   if (!session) {
     res.status(404).json({ message: "Session not found" });
     return;
